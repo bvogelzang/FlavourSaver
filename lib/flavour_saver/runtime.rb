@@ -34,7 +34,7 @@ module FlavourSaver
         @privates = old_privates
         @context = old_context
       else
-        result = evaluate_node(@ast)
+        result = evaluate_node(@ast).to_s.force_encoding(Encoding::default_external)
       end
       result
     end
@@ -115,7 +115,7 @@ module FlavourSaver
       end
     end
 
-    def evaluate_call(call, context=context, &block)
+    def evaluate_call(call, context=self.context, &block)
       context = Helpers.decorate_with(context,@helpers,@locals) unless context.is_a? Helpers::Decorator
       case call
       when ParentCallNode

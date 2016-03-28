@@ -41,7 +41,7 @@ describe FlavourSaver::Parser do
       items.first.method.first.name.should == 'foo'
       items.first.method.first.arguments.should be_empty
     end
-   end
+  end
 
   describe '{{foo.bar}}' do
     subject { FlavourSaver::Parser.parse(FlavourSaver::Lexer.lex('{{foo.bar}}')) }
@@ -143,6 +143,28 @@ describe FlavourSaver::Parser do
     end
   end
 
+  describe '{{foo (bar "baz") }}' do
+    subject { FlavourSaver::Parser.parse(FlavourSaver::Lexer.lex('{{foo (bar "baz") }}')) }
+
+    it 'calls the method "foo"' do
+      items.first.method.should be_one
+      items.first.method.first.should be_a(FlavourSaver::CallNode)
+      items.first.method.first.name.should == 'foo'
+    end
+
+    describe 'with arguments' do
+      subject { FlavourSaver::Parser.parse(FlavourSaver::Lexer.lex('{{foo (bar "baz") }}')).items.first.method.first.arguments }
+
+      describe '[0]' do
+        it 'is a subexpression' do
+          subject.first.first.should be_a(FlavourSaver::CallNode)
+          subject.first.first.name.should == 'bar'
+        end
+      end
+
+    end
+  end
+
   describe '{{foo bar="baz"}}' do
     subject { FlavourSaver::Parser.parse(FlavourSaver::Lexer.lex('{{foo bar="baz"}}')) }
 
@@ -151,6 +173,17 @@ describe FlavourSaver::Parser do
       items.first.method.first.name.should == 'foo'
       items.first.method.first.arguments.first.should be_a(Hash)
       items.first.method.first.arguments.first.should == { :bar => FlavourSaver::StringNode.new('baz') }
+    end
+  end
+
+  describe '{{foo bar=(baz "qux")}}' do
+    subject { FlavourSaver::Parser.parse(FlavourSaver::Lexer.lex('{{foo bar=(baz "qux")}}')) }
+
+    it 'calls the method "foo" with the hash {:bar => (baz "qux")} as arguments' do
+      items.first.method.first.should be_a(FlavourSaver::CallNode)
+      items.first.method.first.name.should == 'foo'
+      items.first.method.first.arguments.first.should be_a(Hash)
+      items.first.method.first.arguments.first[:bar].first.should be_a(FlavourSaver::CallNode)
     end
   end
 
@@ -296,7 +329,6 @@ describe FlavourSaver::Parser do
       -> { subject }.should_not raise_error
     end
   end
-
   describe '' do
     subject { FlavourSaver::Parser.parse(FlavourSaver::Lexer.lex('')) }
 
@@ -304,5 +336,15 @@ describe FlavourSaver::Parser do
       items.should be_empty
     end
   end
-
+  describe '{{foo "bar" fred="wilma"}}' do
+    subject { FlavourSaver::Parser.parse(FlavourSaver::Lexer.lex('{{foo "bar" fred="wilma"}}')) }
+    it 'calls the method "foo" with the "bar" and {:fred => "wilma"} as arguments' do
+      items.first.method.first.should be_a(FlavourSaver::CallNode)
+      items.first.method.first.name.should == 'foo'
+      items.first.method.first.arguments.first.should be_a(FlavourSaver::StringNode)
+      items.first.method.first.arguments.first.value.should == 'bar'
+      items.first.method.first.arguments.last.should be_a(Hash)
+      items.first.method.first.arguments.last.should == { :fred => FlavourSaver::StringNode.new('wilma') }
+    end
+  end
 end

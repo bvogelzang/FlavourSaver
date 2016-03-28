@@ -39,12 +39,17 @@ module FlavourSaver
     end
 
     production(:template_item) do
-      clause('output') { |e| e }
+      clause('raw_bl')     { |e| e }
+      clause('output')     { |e| e }
       clause('expression') { |e| e }
     end
 
     production(:output) do
       clause('OUT') { |o| OutputNode.new(o) }
+    end
+
+    production(:raw_bl) do
+      clause('RAWSTART RAWSTRING RAWEND') { |_,e,_| OutputNode.new(e) }
     end
 
     production(:expression) do
@@ -79,6 +84,10 @@ module FlavourSaver
 
     production(:expr) do
       clause('EXPRST expression_contents EXPRE') { |_,e,_| e }
+    end
+
+    production(:subexpr) do
+      clause('OPAR expression_contents CPAR') { |_,e,_| e }
     end
 
     production(:expr_comment) do
@@ -121,11 +130,11 @@ module FlavourSaver
 
     production('arguments') do
       clause('argument_list') { |e| e }
-      clause('argument_list hash') { |e0,e1| e0 + [e1] }
+      clause('argument_list WHITE hash') { |e0,_,e1| e0 + [e1] }
       clause('hash') { |e| [e] }
     end
-
-    nonempty_list(:argument_list, [:object_path,:lit], :WHITE)
+    
+    nonempty_list(:argument_list, [:object_path,:lit, :local, :subexpr], :WHITE)
 
     production(:lit) do
       clause('string') { |e| e }
@@ -152,6 +161,7 @@ module FlavourSaver
     end
 
     production(:hash_item) do
+      clause('IDENT EQ subexpr') { |e0,_,e1| { e0.to_sym => e1 } }
       clause('IDENT EQ string') { |e0,_,e1| { e0.to_sym => e1 } }
       clause('IDENT EQ number') { |e0,_,e1| { e0.to_sym => e1 } }
       clause('IDENT EQ object_path') { |e0,_,e1| { e0.to_sym => e1 } }

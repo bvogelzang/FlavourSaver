@@ -14,6 +14,13 @@ Rails and on other frameworks (such as Sinatra) via Tilt.
 
 Please use it, break it, and send issues/PR's for improvement.
 
+## Caveat
+
+FlavourSaver is used in production by a lot of folks, none of whom are me.  As
+I don't use FlavourSaver in my daily life I will not be responding to issues
+unless they have a corresponding PR.  If you'd like to take over maintaining
+this project then get in contact.
+
 ## License
 
 FlavourSaver is Copyright (c) 2013 Resistor Limited and licensed under the terms
@@ -66,6 +73,8 @@ Currently supported:
     - Block expressions with inverse blocks
     - Inverse blocks
   - Partials
+  - Raw content (`{{{{raw}}}} not parsed or validated {{{{/raw}}}}`)
+  - Subexpressions (`{{sum 1 (sum 1 1)}}` returns `3`)
 
 ## Helpers
 
@@ -239,6 +248,35 @@ Which could be used like so:
   {{person.name}} is male.
 {{/isFemale}}
 ```
+
+### Subexpressions
+
+You can use a subexpression as any value for a helper, and it will be executed before it is ran. You can also nest them, and use them in assignment of variables. 
+
+Below are some examples, utilizing a "sum" helper than adds together two numbers.
+
+```
+{{sum (sum 5 10) (sum 2 (sum 1 4))}}
+#=> 22
+
+{{#if (sum 1 2) > 2}}its more{{/if}}
+#=> its more
+
+{{#student_heights size=(sum boys girls)}}
+```
+
+### Raw Content
+
+Sometimes you don't want a section of content to be evaluted as handlebars, such as when you want to display it in a page that renders with handlebars. FlavourSaver offers a `raw` helper, that will allow you to pass anything through wrapped in those elements, and it will not be evaluated. 
+
+```
+{{{{raw}}}}
+{{if} this tries to parse, it will break on syntax
+{{{{/raw}}}}
+=> {{if} this tries to parse, it will break on syntax
+```
+
+Its important to note that while this looks like a block helper, it is not in practice. This is why you must omit the use of a `#` when writing it. 
 
 ### Using Partials
 

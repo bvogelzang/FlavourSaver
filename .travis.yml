@@ -4,6 +4,10 @@ rvm:
   - 2.0.0
   - 2.1.5
   - 2.2.1
+<<<<<<< HEAD
+=======
+  - 2.2.2
+>>>>>>> jamesotron/master
   - jruby-19mode
   - rbx-19mode
 script: 'bundle exec rspec'
